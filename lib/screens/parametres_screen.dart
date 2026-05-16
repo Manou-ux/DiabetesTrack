@@ -411,7 +411,7 @@ class ParametresScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
                       Text('Version de l\'application', style: TextStyle(fontSize: 16, color: Colors.white)),
-                      Text('1.0.0', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      Text('1.0.1', style: TextStyle(fontSize: 16, color: Colors.grey)),
                     ],
                   ),
                   const Padding(

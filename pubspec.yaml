@@ -1,7 +1,7 @@
 name: diabetes_track
 description: "Suivi du Diabete: glycemie, medicament et alimentation"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+10
 
 # Bloc manquant à ajouter :
 environment:
