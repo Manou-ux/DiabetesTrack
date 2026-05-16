@@ -53,8 +53,12 @@ Le projet est organisé de la manière suivante :
 ## 📱 Aperçu de l'Application
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/8e477218-1e20-432e-9184-04f78f2d8bb6" width="220" />
-  <img src="https://github.com/user-attachments/assets/28032521-0766-47a5-a940-9f8fcb9c3e6e" width="220" />
-  <img src="https://github.com/user-attachments/assets/38ec88d2-5410-4b14-8792-08d1b6b3d5ec" width="220" />
-  <img src="https://github.com/user-attachments/assets/658d092d-65b5-49ef-b3bd-dc8869a5c6b0" width="220" />
+  <img src="https://github.com/user-attachments/assets/8e477218-1e20-432e-9184-04f78f2d8bb6" width="300" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/28032521-0766-47a5-a940-9f8fcb9c3e6e" width="300" />
+</p>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/38ec88d2-5410-4b14-8792-08d1b6b3d5ec" width="300" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/658d092d-65b5-49ef-b3bd-dc8869a5c6b0" width="300" />
 </p>
