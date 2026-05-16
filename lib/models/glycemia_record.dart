@@ -22,6 +22,9 @@ class GlycemiaRecord extends HiveObject {
 
   @HiveField(5)
   String type; // 'glycemie', 'medicament', 'aliment'
+  
+  @HiveField(6)
+  String? notes;
 
   GlycemiaRecord({
     required this.value,
@@ -30,6 +33,7 @@ class GlycemiaRecord extends HiveObject {
     required this.category,
     required this.dateTime,
     required this.type,
+    this.notes,
   });
 
   // Légende dynamique selon l'unité

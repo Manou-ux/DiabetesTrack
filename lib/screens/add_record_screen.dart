@@ -15,6 +15,7 @@ class AddRecordScreen extends StatefulWidget {
 class _AddRecordScreenState extends State<AddRecordScreen> {
   late TextEditingController _valueController;
   late TextEditingController _customConditionController;
+  late TextEditingController _notesController; // <-- NOUVEAU : Pour gérer le texte de la remarque
   late String _selectedUnit;
   late String _selectedCondition;
   DateTime _selectedDateTime = DateTime.now();
@@ -31,6 +32,17 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     _valueController = TextEditingController(text: isEdit ? widget.record!.value.toString() : (_type == TrackingType.glycemie ? (_selectedUnit == 'mg/dL' ? '65.0' : '3.6') : '5.0'));
     _selectedCondition = isEdit ? widget.record!.condition : (_type == TrackingType.glycemie ? 'Jeûne' : (_type == TrackingType.medicament ? 'Insuline Rapide' : 'Glucides - Petit Déj'));
     _customConditionController = TextEditingController(text: isEdit ? widget.record!.condition : '');
+    
+    // --- NOUVEAU : Initialisation de la remarque si elle existe déjà ---
+    _notesController = TextEditingController(text: isEdit ? widget.record!.notes : '');
+  }
+
+  @override
+  void dispose() {
+    _valueController.dispose();
+    _customConditionController.dispose();
+    _notesController.dispose(); // <-- Libération de la mémoire
+    super.dispose();
   }
 
   @override
@@ -128,21 +140,70 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
               _buildIntervalLegend(currentCat),
               const SizedBox(height: 24),
             ],
+            
+            // --- BOX DATE & HEURE DESIGN AVEC IMPORT DU BOUTON REMARQUE DE LA PHOTO ---
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: const Color(0xFF1E2435), borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: const Icon(Icons.calendar_today, color: Colors.teal),
-                title: Text(DateFormat('yyyy - MMMM dd - HH:mm', 'fr').format(_selectedDateTime)),
-                onTap: () async {
-                  final d = await showDatePicker(context: context, initialDate: _selectedDateTime, firstDate: DateTime(2020), lastDate: DateTime.now());
-                  if (d != null) {
-                    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
-                    if (t != null) {
-                      setState(() { _selectedDateTime = DateTime(d.year, d.month, d.day, t.hour, t.minute); });
-                    }
-                  }
-                },
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Date et heure', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+                      
+                      // Bouton Remarque + dynamique comme demandé
+                      TextButton.icon(
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                        onPressed: _showNotesInputDialog,
+                        icon: const Icon(Icons.add, size: 16, color: Color(0xFF0FB2A0)),
+                        label: Text(
+                          _notesController.text.isNotEmpty ? 'Modifier Remarque' : 'Remarque',
+                          style: const TextStyle(color: Color(0xFF0FB2A0), fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.calendar_today, color: Color(0xFF0FB2A0)),
+                    title: Text(
+                      DateFormat('yyyy - MMMM dd - HH:mm', 'fr').format(_selectedDateTime),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    trailing: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                    onTap: () async {
+                      final d = await showDatePicker(context: context, initialDate: _selectedDateTime, firstDate: DateTime(2020), lastDate: DateTime.now());
+                      if (d != null) {
+                        final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_selectedDateTime));
+                        if (t != null) {
+                          setState(() { _selectedDateTime = DateTime(d.year, d.month, d.day, t.hour, t.minute); });
+                        }
+                      }
+                    },
+                  ),
+                  
+                  // --- AFFICHAGE DE LA REMARQUE SAISIE SI NON VIDE ---
+                  if (_notesController.text.isNotEmpty) ...[
+                    const Divider(color: Color(0xFF2C354A)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.notes, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _notesController.text,
+                              style: const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 30),
@@ -224,6 +285,43 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     );
   }
 
+  // --- NOUVEAU : BOÎTE DE DIALOGUE POUR AJOUTER LA NOTE ---
+  void _showNotesInputDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E2435),
+        title: const Text('Ajouter une remarque', style: TextStyle(color: Colors.white, fontSize: 16)),
+        content: TextField(
+          controller: _notesController,
+          maxLines: 3,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Saisissez vos notes ou remarques ici...',
+            hintStyle: const TextStyle(color: Colors.grey),
+            filled: true,
+            fillColor: const Color(0xFF131824),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0FB2A0)),
+            onPressed: () {
+              setState(() {}); // Rafraîchit l'UI pour voir le texte sous la date
+              Navigator.pop(context);
+            },
+            child: const Text('OK', style: TextStyle(color: Colors.white)),
+          )
+        ],
+      ),
+    );
+  }
+
   void _saveRecord() {
     final val = double.tryParse(_valueController.text) ?? 0.0;
     if (val <= 0 || _selectedCondition.isEmpty) return;
@@ -232,15 +330,26 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
     final box = Hive.box<GlycemiaRecord>('glycemia_box');
     final typeString = _type == TrackingType.glycemie ? 'glycemie' : (_type == TrackingType.medicament ? 'medicament' : 'aliment');
 
+    // Sauvegarde en base en injectant la valeur de _notesController.text
     if (widget.record != null) {
       widget.record!.value = val;
       widget.record!.unit = _selectedUnit;
       widget.record!.condition = _selectedCondition;
       widget.record!.category = cat;
       widget.record!.dateTime = _selectedDateTime;
+      widget.record!.type = typeString;
+      widget.record!.notes = _notesController.text; // <-- ENREGISTREMENT DE LA MODIFICATION
       widget.record!.save();
     } else {
-      box.add(GlycemiaRecord(value: val, unit: _selectedUnit, condition: _selectedCondition, category: cat, dateTime: _selectedDateTime, type: typeString));
+      box.add(GlycemiaRecord(
+        value: val, 
+        unit: _selectedUnit, 
+        condition: _selectedCondition, 
+        category: cat, 
+        dateTime: _selectedDateTime, 
+        type: typeString,
+        notes: _notesController.text, // <-- ENREGISTREMENT DU NOUVEL ELEMENT
+      ));
     }
     Navigator.pop(context);
   }

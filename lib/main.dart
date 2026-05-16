@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/date_symbol_data_local.dart'; // <-- 1. AJOUTE CET IMPORT
+import 'package:intl/date_symbol_data_local.dart';
 import 'models/glycemia_record.dart';
-import 'screens/main_screen.dart';
+import 'screens/welcome_screen.dart'; // <-- 1. REMPLACE L'IMPORT PAR CELUI-CI
 
 void main() async {
-  // Garantit que les services Flutter sont prêts
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 2. INITIALISE LES DONNÉES DE LOCALISATION (FRANÇAIS, ETC.)
   await initializeDateFormatting('fr', null);
 
-  // Initialisation de Hive
   await Hive.initFlutter();
   Hive.registerAdapter(GlycemiaRecordAdapter());
   await Hive.openBox<GlycemiaRecord>('glycemia_box');
@@ -36,7 +33,7 @@ class DiabetesTrackApp extends StatelessWidget {
           surface: Color(0xFF1E2435),
         ),
       ),
-      home: const MainScreen(),
+      home: const WelcomeScreen(), // <-- 2. TON APP DÉMARRE ICI MAINTENANT
     );
   }
 }

@@ -10,65 +10,90 @@ class CrudGlycemieView extends StatelessWidget {
   final String filter;
   const CrudGlycemieView({super.key, required this.records, required this.filter});
 
+  // Fonction utilitaire pour adapter la valeur stockée à l'unité d'affichage globale
+  double _getConvertedValue(GlycemiaRecord r, String currentGlobalUnit) {
+    if (r.unit.toLowerCase() == currentGlobalUnit.toLowerCase()) {
+      return r.value;
+    }
+    // Conversion dynamique à la volée
+    if (r.unit == 'mg/dL' && currentGlobalUnit == 'mmol/l') {
+      return r.value / 18.0182;
+    } else if (r.unit == 'mmol/l' && currentGlobalUnit == 'mg/dL') {
+      return r.value * 18.0182;
+    }
+    return r.value;
+  }
+
   @override
   Widget build(BuildContext context) {
-    double recent = records.isNotEmpty ? records.last.value : 0.0;
-    double moyenne = records.isNotEmpty ? records.map((e) => e.value).reduce((a, b) => a + b) / records.length : 0.0;
-    String unit = AppState.globalUnit.value;
+    // Écoute en temps réel de l'unité globale modifiée dans les paramètres
+    return ValueListenableBuilder<String>(
+      valueListenable: AppState.globalUnit,
+      builder: (context, unit, _) {
+        // Calcul des stats basées sur les valeurs converties dynamiquement
+        double recent = records.isNotEmpty ? _getConvertedValue(records.last, unit) : 0.0;
+        double moyenne = records.isNotEmpty
+            ? records.map((e) => _getConvertedValue(e, unit)).reduce((a, b) => a + b) / records.length
+            : 0.0;
 
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ActionChip(
-                avatar: const Icon(Icons.filter_list, size: 16, color: Colors.white),
-                label: Text(filter, style: const TextStyle(color: Colors.white)),
-                backgroundColor: const Color(0xFF2C354A),
-                onPressed: () => _openFilterPicker(context),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ActionChip(
+                    avatar: const Icon(Icons.filter_list, size: 16, color: Colors.white),
+                    label: Text(filter, style: const TextStyle(color: Colors.white)),
+                    backgroundColor: const Color(0xFF2C354A),
+                    onPressed: () => _openFilterPicker(context),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _stat('Récent', recent, unit),
+                      _stat('Moyenne (3 jours)', moyenne, unit),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+                _buildAdvancedChart(unit), // L'unité choisie pilote la graduation du graphique
+                const SizedBox(height: 15),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 90),
+                    itemCount: records.length,
+                    itemBuilder: (context, index) {
+                      final r = records[records.length - 1 - index];
+                      return _buildCard(context, r, unit);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _stat('Récent', recent, unit),
-                  _stat('Moyenne (3 jours)', moyenne, unit), // Correspond aux captures
-                ],
+            Positioned(
+              bottom: 16, left: 16, right: 16,
+              child: SizedBox(
+                height: 55,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0FB2A0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                  ),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddRecordScreen())),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text('AJOUTER', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            _buildAdvancedChart(unit), // Graphique perfectionné
-            const SizedBox(height: 15),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 90),
-                itemCount: records.length,
-                itemBuilder: (context, index) {
-                  final r = records[records.length - 1 - index];
-                  return _buildCard(context, r, unit);
-                },
-              ),
-            ),
+            )
           ],
-        ),
-        Positioned(
-          bottom: 16, left: 16, right: 16,
-          child: SizedBox(
-            height: 55,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0FB2A0), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddRecordScreen())),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('AJOUTER', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        )
-      ],
+        );
+      },
     );
   }
 
@@ -98,11 +123,10 @@ class CrudGlycemieView extends StatelessWidget {
       padding: const EdgeInsets.only(right: 24, left: 8),
       child: LineChart(
         LineChartData(
-          // Configuration de la grille demandée
           gridData: FlGridData(
             show: true,
-            drawHorizontalLine: false, // Pas de lignes horizontales
-            drawVerticalLine: true,   // Uniquement des lignes verticales pour les jours
+            drawHorizontalLine: false,
+            drawVerticalLine: true,
             getDrawingVerticalLine: (value) => const FlLine(color: Color(0xFF2C354A), strokeWidth: 1),
           ),
           titlesData: FlTitlesData(
@@ -127,6 +151,7 @@ class CrudGlycemieView extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 40,
                 getTitlesWidget: (value, meta) {
+                  // Les graduations s'adaptent dynamiquement à l'échelle (ex: de 3.0 à 7.0 pour mmol/l ou de 60 à 180 pour mg/dL)
                   return Text(value.toStringAsFixed(1), style: const TextStyle(color: Colors.grey, fontSize: 11));
                 },
               ),
@@ -137,12 +162,12 @@ class CrudGlycemieView extends StatelessWidget {
           borderData: FlBorderData(show: false),
           lineBarsData: [
             LineChartBarData(
-              spots: records.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.value)).toList(),
+              // Attribution des valeurs adaptées à l'unité en cours
+              spots: records.asMap().entries.map((e) => FlSpot(e.key.toDouble(), _getConvertedValue(e.value, unit))).toList(),
               isCurved: true,
-              color: const Color(0xFF10B981), // Courbe verte
+              color: const Color(0xFF10B981),
               barWidth: 3,
               dotData: const FlDotData(show: true),
-              // Couleur verte transparente en dessous de la courbe
               belowBarData: BarAreaData(
                 show: true,
                 color: const Color(0xFF10B981).withOpacity(0.15),
@@ -159,6 +184,9 @@ class CrudGlycemieView extends StatelessWidget {
     if (r.category == 'Basse') statusColor = Colors.blue;
     if (r.category == 'Prédiabète') statusColor = Colors.orange;
     if (r.category == 'Diabète') statusColor = Colors.red;
+
+    // Conversion de la valeur de la carte individuelle si nécessaire
+    double displayValue = _getConvertedValue(r, unit);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -184,7 +212,7 @@ class CrudGlycemieView extends StatelessWidget {
                 ),
               ),
             ),
-            Text(r.value.toStringAsFixed(1), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(displayValue.toStringAsFixed(1), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(width: 4),
             Text(unit, style: const TextStyle(color: Colors.grey, fontSize: 12)),
             IconButton(
