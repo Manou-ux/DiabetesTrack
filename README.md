@@ -5,7 +5,7 @@
 [![Database](https://img.shields.io/badge/Local%20DB-Hive-FF6F00?logo=hive&logoColor=white)](https://pub.dev/packages/hive)
 [![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Web-00ULL?style=flat)](https://github.com/votre_username)
 
-**Diabetes Track** est une application multiplateforme moderne conçue pour simplifier le suivi quotidien des patients diabétiques. Elle permet d'enregistrer et de catégoriser précisément la glycémie, la prise de médicaments (insuline) et l'alimentation, tout en offrant des visualisations graphiques avancées et un filtrage dynamique pour analyser l'évolution de la santé.
+**Diabetes Track** est une application Android moderne conçue pour simplifier le suivi quotidien du diabète. Elle permet d'enregistrer et de catégoriser précisément la glycémie, la prise de médicaments et l'alimentation, tout en offrant des visualisations graphiques avancées et un filtrage dynamique pour analyser l'évolution de la santé.
 
 ---
 
